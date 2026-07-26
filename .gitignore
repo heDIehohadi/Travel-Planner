@@ -1,0 +1,25 @@
+# Virtual Environment
+backend/.venv/
+
+# Environment Variables
+backend/.env
+
+# Python
+
+*.py[cod]
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Logs
+*.log
+
+*.sqlite3
+__pycache__/
+*.pyc
