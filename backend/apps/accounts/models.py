@@ -9,7 +9,7 @@ from django.utils import timezone
 class CustomUserManager(BaseUserManager):
     """becuase of the login(which is with the phone )we should have our custom manager """
 
-    def create_user(self,phone_number,password=None,**extra_fields):
+    def create_user(self,phone_number,password=None,**extra_fields):# extra fields:additional user fields as keyword arguments
         """show the manager how create a user """
         if not phone_number:
             raise ValueError ("شماره تلقن الزامی است")
@@ -43,7 +43,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     
     objects=CustomUserManager()
 
-    USERNAME_FIELD = "phone_number" #defualt=user_name
+    USERNAME_FIELD = "phone_number" #default=user_name
 
     REQUIRED_FIELDS = [] #password,USERNAME_FIELD(which is phone_number now) for creatsuperuser
     is_phone_verified = models.BooleanField(default=False)
@@ -52,3 +52,16 @@ class User(AbstractBaseUser,PermissionsMixin):
 
     def __str__(self):
             return self.phone_number    
+class OTPRequest(models.Model):
+    phone_number = models.CharField(max_length=15, db_index=True)
+    otp_code = models.CharField(max_length=6)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-created_at'] # Meta contains model-level configuration, not field definitions.
+                                   # It applies to the whole model instead of a single field.
+
+  
