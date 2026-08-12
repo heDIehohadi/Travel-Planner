@@ -1,12 +1,16 @@
-class OTPError(Exception):
+from core.exceptions import BadRequestError, TooManyRequestsError
+
+
+class OTPNotFound(BadRequestError):
     pass
-class OTPNotFound(OTPError):
+
+class InvalidOTPError(BadRequestError):
     pass
-class InvalidOTPError(OTPError):
+
+class ExpiredOTPError(BadRequestError):
     pass
-class ExpiredOTPError(OTPError):
+
+class TooManyAttemptsError(TooManyRequestsError):
     pass
-class TooManyAttemptsError(OTPError):
-    pass
-class RateLimitError(OTPError):
-    pass
+
+class RateLimitError(TooManyRequestsError): pass

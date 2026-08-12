@@ -4,7 +4,7 @@ from django.db import transaction  # for action we need to done all or stop all
 # better use it as decorator, not with (with statement)
 from django.utils import timezone  # for django timezone is better
 from apps.accounts.models import OTPRequest
-from accounts.exceptions import ExpiredOTPError,InvalidOTPError,TooManyAttemptsError,RateLimitError,OTPNotFound
+from apps.accounts.exceptions import ExpiredOTPError,InvalidOTPError,TooManyAttemptsError,RateLimitError,OTPNotFound
 
 class OTPService:
     """otp lifecycle"""
