@@ -55,7 +55,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-REST_FRAMEWORK = {"EXCEPTION_HANDLER": "core.exceptions_handler.custom_exception_handler"}
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "core.exceptions_handler.custom_exception_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
