@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
+
 from .models import Destination, TravelPlan
+
 
 class TravelPlanAPITests(APITestCase):
 
@@ -13,22 +15,33 @@ class TravelPlanAPITests(APITestCase):
         self.user = User.objects.create_user(
             phone_number="09120000000",
         )
+
         self.other_user = User.objects.create_user(
             phone_number="09121111111",
         )
+
         self.origin = Destination.objects.create(
             name="Tehran",
+            type=Destination.DestinationType.CITY,
         )
+
         self.destination = Destination.objects.create(
             name="Shiraz",
+            type=Destination.DestinationType.CITY,
         )
+
         self.other_origin = Destination.objects.create(
             name="Rasht",
+            type=Destination.DestinationType.CITY,
         )
 
         self.client.force_authenticate(
             user=self.user
         )
+
+    # -------------------------
+    # LIST
+    # -------------------------
 
     def test_authenticated_user_can_list_travel_plans(self):
         response = self.client.get(
@@ -45,14 +58,18 @@ class TravelPlanAPITests(APITestCase):
             user=self.user,
             origin=self.origin,
             destination=self.destination,
-            budget=100000,
+            budget_min=100000,
+            budget_max=200000,
+            currency="IRR",
         )
 
         TravelPlan.objects.create(
             user=self.other_user,
             origin=self.other_origin,
             destination=self.destination,
-            budget=200000,
+            budget_min=200000,
+            budget_max=300000,
+            currency="IRR",
         )
 
         response = self.client.get(
@@ -70,9 +87,13 @@ class TravelPlanAPITests(APITestCase):
         )
 
         self.assertEqual(
-            response.data[0]["budget"],
-            100000,
+            response.data[0]["budget_min"],
+            "100000.00",
         )
+
+    # -------------------------
+    # CREATE
+    # -------------------------
 
     def test_authenticated_user_can_create_travel_plan(self):
         response = self.client.post(
@@ -80,7 +101,11 @@ class TravelPlanAPITests(APITestCase):
             {
                 "origin": self.origin.id,
                 "destination": self.destination.id,
-                "budget": 100000,
+                "travel_date_from": "2026-10-01",
+                "travel_date_to": "2026-10-07",
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
             },
             format="json",
         )
@@ -96,7 +121,9 @@ class TravelPlanAPITests(APITestCase):
             {
                 "origin": self.origin.id,
                 "destination": self.destination.id,
-                "budget": 100000,
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
             },
             format="json",
         )
@@ -115,12 +142,18 @@ class TravelPlanAPITests(APITestCase):
             self.user,
         )
 
+    # -------------------------
+    # RETRIEVE
+    # -------------------------
+
     def test_user_can_retrieve_their_own_travel_plan(self):
         travel_plan = TravelPlan.objects.create(
             user=self.user,
             origin=self.origin,
             destination=self.destination,
-            budget=100000,
+            budget_min=100000,
+            budget_max=200000,
+            currency="IRR",
         )
 
         response = self.client.get(
@@ -142,7 +175,9 @@ class TravelPlanAPITests(APITestCase):
             user=self.other_user,
             origin=self.origin,
             destination=self.destination,
-            budget=200000,
+            budget_min=200000,
+            budget_max=300000,
+            currency="IRR",
         )
 
         response = self.client.get(
@@ -154,12 +189,18 @@ class TravelPlanAPITests(APITestCase):
             status.HTTP_404_NOT_FOUND,
         )
 
+    # -------------------------
+    # UPDATE
+    # -------------------------
+
     def test_user_can_update_their_own_travel_plan_with_put(self):
         travel_plan = TravelPlan.objects.create(
             user=self.user,
             origin=self.origin,
             destination=self.destination,
-            budget=100000,
+            budget_min=100000,
+            budget_max=200000,
+            currency="IRR",
         )
 
         response = self.client.put(
@@ -167,7 +208,11 @@ class TravelPlanAPITests(APITestCase):
             {
                 "origin": self.other_origin.id,
                 "destination": self.destination.id,
-                "budget": 300000,
+                "travel_date_from": "2026-11-01",
+                "travel_date_to": "2026-11-10",
+                "budget_min": "300000.00",
+                "budget_max": "500000.00",
+                "currency": "IRR",
             },
             format="json",
         )
@@ -190,8 +235,13 @@ class TravelPlanAPITests(APITestCase):
         )
 
         self.assertEqual(
-            travel_plan.budget,
+            travel_plan.budget_min,
             300000,
+        )
+
+        self.assertEqual(
+            travel_plan.budget_max,
+            500000,
         )
 
     def test_user_can_partially_update_their_own_travel_plan(self):
@@ -199,13 +249,16 @@ class TravelPlanAPITests(APITestCase):
             user=self.user,
             origin=self.origin,
             destination=self.destination,
-            budget=100000,
+            budget_min=100000,
+            budget_max=200000,
+            currency="IRR",
         )
 
         response = self.client.patch(
             f"/travel/plans/{travel_plan.id}/",
             {
-                "budget": 500000,
+                "budget_min": "500000.00",
+                "budget_max": "700000.00",
             },
             format="json",
         )
@@ -218,8 +271,13 @@ class TravelPlanAPITests(APITestCase):
         travel_plan.refresh_from_db()
 
         self.assertEqual(
-            travel_plan.budget,
+            travel_plan.budget_min,
             500000,
+        )
+
+        self.assertEqual(
+            travel_plan.budget_max,
+            700000,
         )
 
         self.assertEqual(
@@ -237,13 +295,16 @@ class TravelPlanAPITests(APITestCase):
             user=self.other_user,
             origin=self.origin,
             destination=self.destination,
-            budget=200000,
+            budget_min=200000,
+            budget_max=300000,
+            currency="IRR",
         )
 
         response = self.client.patch(
             f"/travel/plans/{other_plan.id}/",
             {
-                "budget": 999999,
+                "budget_min": "900000.00",
+                "budget_max": "999999.00",
             },
             format="json",
         )
@@ -256,7 +317,7 @@ class TravelPlanAPITests(APITestCase):
         other_plan.refresh_from_db()
 
         self.assertEqual(
-            other_plan.budget,
+            other_plan.budget_min,
             200000,
         )
 
@@ -269,7 +330,9 @@ class TravelPlanAPITests(APITestCase):
             user=self.user,
             origin=self.origin,
             destination=self.destination,
-            budget=100000,
+            budget_min=100000,
+            budget_max=200000,
+            currency="IRR",
         )
 
         response = self.client.delete(
@@ -287,16 +350,14 @@ class TravelPlanAPITests(APITestCase):
             ).exists()
         )
 
-    # -------------------------
-    # USER ISOLATION - DELETE
-    # -------------------------
-
     def test_user_cannot_delete_another_users_travel_plan(self):
         other_plan = TravelPlan.objects.create(
             user=self.other_user,
             origin=self.origin,
             destination=self.destination,
-            budget=200000,
+            budget_min=200000,
+            budget_max=300000,
+            currency="IRR",
         )
 
         response = self.client.delete(
@@ -338,7 +399,9 @@ class TravelPlanAPITests(APITestCase):
             {
                 "origin": self.origin.id,
                 "destination": self.destination.id,
-                "budget": 100000,
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
             },
             format="json",
         )
@@ -352,12 +415,31 @@ class TravelPlanAPITests(APITestCase):
     # VALIDATION
     # -------------------------
 
-    def test_origin_is_required(self):
+    def test_origin_is_optional(self):
         response = self.client.post(
             "/travel/plans/",
             {
                 "destination": self.destination.id,
-                "budget": 100000,
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+
+    def test_destination_is_required(self):
+        response = self.client.post(
+            "/travel/plans/",
+            {
+                "origin": self.origin.id,
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
             },
             format="json",
         )
@@ -367,12 +449,30 @@ class TravelPlanAPITests(APITestCase):
             status.HTTP_400_BAD_REQUEST,
         )
 
-    def test_destination_is_required(self):
+    def test_travel_date_from_cannot_be_after_travel_date_to(self):
         response = self.client.post(
             "/travel/plans/",
             {
-                "origin": self.origin.id,
-                "budget": 100000,
+                "destination": self.destination.id,
+                "travel_date_from": "2026-10-20",
+                "travel_date_to": "2026-10-10",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    def test_budget_min_cannot_be_greater_than_budget_max(self):
+        response = self.client.post(
+            "/travel/plans/",
+            {
+                "destination": self.destination.id,
+                "budget_min": "500000.00",
+                "budget_max": "300000.00",
+                "currency": "IRR",
             },
             format="json",
         )
