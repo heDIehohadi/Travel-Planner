@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'apps.accounts',
     'core',
-    'apps.travel'
+    'apps.travel',
+    'apps.ai',
     
     ]
 
