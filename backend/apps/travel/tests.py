@@ -510,3 +510,36 @@ class TravelPlanAPITests(APITestCase):
             response.status_code,
             status.HTTP_400_BAD_REQUEST,
         )
+    def test_patch_unrelated_field_keeps_saved_destination(self):
+        plan = TravelPlan.objects.create(
+            user=self.user,
+            destination=self.destination,
+        )
+
+        response = self.client.patch(
+            f"/travel/plans/{plan.id}/",
+            {"currency": "IRR"},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+    def test_patch_cannot_remove_the_only_input(self):
+        plan = TravelPlan.objects.create(
+            user=self.user,
+            destination=self.destination,
+        )
+
+        response = self.client.patch(
+            f"/travel/plans/{plan.id}/",
+            {"destination": None},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )    
