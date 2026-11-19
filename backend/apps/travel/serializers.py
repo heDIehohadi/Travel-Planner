@@ -32,6 +32,7 @@ class TravelPlanSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        destination = attrs.get("destination")
         travel_date_from = attrs.get("travel_date_from")
         travel_date_to = attrs.get("travel_date_to")
 
@@ -64,6 +65,17 @@ class TravelPlanSerializer(serializers.ModelSerializer):
                         "or equal to budget_min."
                     )
                 }
+            )
+
+        if (
+            destination is None
+            and travel_date_from is None
+            and travel_date_to is None
+            and budget_min is None
+            and budget_max is None
+        ):
+            raise serializers.ValidationError(
+                "Provide at least one of: destination, budget, or travel dates."
             )
 
         return attrs

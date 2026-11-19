@@ -72,6 +72,8 @@ class TravelPlan(models.Model):
         Destination,
         on_delete=models.PROTECT,
         related_name="destination_travel_plans",
+        null=True,
+        blank=True,
     )
 
     travel_date_from = models.DateField(
