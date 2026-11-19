@@ -32,11 +32,20 @@ class TravelPlanSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        travel_date_from = attrs.get("travel_date_from")
-        travel_date_to = attrs.get("travel_date_to")
+        def current(field):
+            # On PATCH, fields missing from the request keep their saved values.
+            if field in attrs:
+                return attrs[field]
+            if self.instance is not None:
+                return getattr(self.instance, field)
+            return None
 
-        budget_min = attrs.get("budget_min")
-        budget_max = attrs.get("budget_max")
+        destination = current("destination")
+        travel_date_from = current("travel_date_from")
+        travel_date_to = current("travel_date_to")
+
+        budget_min = current("budget_min")
+        budget_max = current("budget_max")
 
         if (
             travel_date_from
@@ -64,6 +73,17 @@ class TravelPlanSerializer(serializers.ModelSerializer):
                         "or equal to budget_min."
                     )
                 }
+            )
+
+        if (
+            destination is None
+            and travel_date_from is None
+            and travel_date_to is None
+            and budget_min is None
+            and budget_max is None
+        ):
+            raise serializers.ValidationError(
+                "Provide at least one of: destination, budget, or travel dates."
             )
 
         return attrs

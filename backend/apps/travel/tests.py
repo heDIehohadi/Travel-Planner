@@ -432,13 +432,42 @@ class TravelPlanAPITests(APITestCase):
             status.HTTP_201_CREATED,
         )
 
-    def test_destination_is_required(self):
+    def test_destination_is_optional_when_budget_is_provided(self):
+        response = self.client.post(
+            "/travel/plans/",
+            {
+                "budget_min": "100000.00",
+                "budget_max": "200000.00",
+                "currency": "IRR",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+
+    def test_destination_is_optional_when_dates_are_provided(self):
+        response = self.client.post(
+            "/travel/plans/",
+            {
+                "travel_date_from": "2026-12-10",
+                "travel_date_to": "2026-12-15",
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+
+    def test_at_least_one_of_destination_budget_or_dates_is_required(self):
         response = self.client.post(
             "/travel/plans/",
             {
                 "origin": self.origin.id,
-                "budget_min": "100000.00",
-                "budget_max": "200000.00",
                 "currency": "IRR",
             },
             format="json",
@@ -481,3 +510,36 @@ class TravelPlanAPITests(APITestCase):
             response.status_code,
             status.HTTP_400_BAD_REQUEST,
         )
+    def test_patch_unrelated_field_keeps_saved_destination(self):
+        plan = TravelPlan.objects.create(
+            user=self.user,
+            destination=self.destination,
+        )
+
+        response = self.client.patch(
+            f"/travel/plans/{plan.id}/",
+            {"currency": "IRR"},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+    def test_patch_cannot_remove_the_only_input(self):
+        plan = TravelPlan.objects.create(
+            user=self.user,
+            destination=self.destination,
+        )
+
+        response = self.client.patch(
+            f"/travel/plans/{plan.id}/",
+            {"destination": None},
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )    
